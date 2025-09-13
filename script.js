@@ -1,149 +1,93 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
-    const signupForm = document.getElementById('signupForm');
-    const usernameInput = document.getElementById('username');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
-    const userTableBody = document.getElementById('userTableBody');
+    const quizQuestions = [
+                {
+                    question: "What is the capital of France?",
+                    options: ["Berlin", "Madrid", "Paris", "Rome"],
+                    correctAnswer: "Paris"
+                },
+                {
+                    question: "Which planet is known as the Red Planet?",
+                    options: ["Earth", "Mars", "Jupiter", "Venus"],
+                    correctAnswer: "Mars"
+                },
+                {
+                    question: "Who wrote 'To Kill a Mockingbird'?",
+                    options: ["Harper Lee", "Mark Twain", "Ernest Hemingway", "F. Scott Fitzgerald"],
+                    correctAnswer: "Harper Lee"
+                },
+                {
+                    question: "What is the largest ocean on Earth?",
+                    options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"],
+                    correctAnswer: "Pacific Ocean"
+                },
+                {
+                    question: "What is the chemical symbol for gold?",
+                    options: ["Au", "Ag", "Fe", "Pb"],
+                    correctAnswer: "Au"
+                }
+            ];
 
-    // Error message elements
-    const usernameError = document.getElementById('usernameError');
-    const emailError = document.getElementById('emailError');
-    const passwordError = document.getElementById('passwordError');
+            const quizForm = document.getElementById('quiz-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const resultBox = document.getElementById('result-box');
+            const resultScore = document.getElementById('result-score');
+            const resultDetails = document.getElementById('result-details');
 
-    // Regular expression for email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    // --- FUNCTIONS ---
-
-    // Function to get users from localStorage
-    const getUsers = () => {
-        const users = localStorage.getItem('users');
-        return users ? JSON.parse(users) : [];
-    };
-
-    // Function to save users to localStorage
-    const saveUsers = (users) => {
-        localStorage.setItem('users', JSON.stringify(users));
-    };
-
-    // Function to display users in the dashboard table
-    const displayUsers = () => {
-        const users = getUsers();
-        userTableBody.innerHTML = ''; // Clear existing rows
-
-        if (users.length === 0) {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="3" style="text-align:center;">No users found.</td>`;
-            userTableBody.appendChild(row);
-            return;
-        }
-
-        users.forEach(user => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${user.username}</td>
-                <td>${user.email}</td>
-                <td><button class="delete-btn" data-username="${user.username}">Delete</button></td>
-            `;
-            userTableBody.appendChild(row);
-        });
-    };
-    
-    // Function to validate inputs and return a boolean
-    const validateInputs = () => {
-        let isValid = true;
-        // Reset errors
-        usernameError.textContent = '';
-        emailError.textContent = '';
-        passwordError.textContent = '';
-        
-        // Validate Username
-        if (usernameInput.value.trim().length < 3) {
-            usernameError.textContent = 'Username must be at least 3 characters.';
-            isValid = false;
-        }
-        
-        // Validate Email
-        if (!emailRegex.test(emailInput.value.trim())) {
-            emailError.textContent = 'Please enter a valid email address.';
-            isValid = false;
-        }
-
-        // Validate Password
-        if (passwordInput.value.length < 8) {
-            passwordError.textContent = 'Password must be at least 8 characters.';
-            isValid = false;
-        }
-        
-        return isValid;
-    };
-
-
-    // --- EVENT LISTENERS ---
-
-    // Handle form submission
-    signupForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Prevent default form submission
-
-        if (!validateInputs()) {
-            return; // Stop if validation fails
-        }
-
-        const username = usernameInput.value.trim();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-
-        const users = getUsers();
-        
-        // Check if user already exists
-        const userExists = users.some(user => user.username === username || user.email === email);
-        if (userExists) {
-            alert('Username or email already exists.');
-            return;
-        }
-
-        // Hash the password using CryptoJS SHA256
-        // NOTE: For a real-world application, hashing should ALWAYS be done on the server-side using a strong, salted algorithm like bcrypt.
-        const hashedPassword = CryptoJS.SHA256(password).toString();
-
-        // Add new user to the array
-        users.push({
-            username: username,
-            email: email,
-            password: hashedPassword // Store the hashed password
-        });
-
-        // Save updated user list to localStorage
-        saveUsers(users);
-
-        // Reset the form
-        signupForm.reset();
-
-        // Refresh the user table
-        displayUsers();
-        
-        alert('Signup successful!');
-    });
-    
-    // Handle delete button clicks using event delegation
-    userTableBody.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-btn')) {
-            const usernameToDelete = e.target.getAttribute('data-username');
-            
-            if (confirm(`Are you sure you want to delete the user "${usernameToDelete}"?`)) {
-                let users = getUsers();
-                // Filter out the user to be deleted
-                users = users.filter(user => user.username !== usernameToDelete);
-                // Save the updated list
-                saveUsers(users);
-                // Refresh the table
-                displayUsers();
+            // Function to render the quiz questions
+            function renderQuestions() {
+                quizQuestions.forEach((q, index) => {
+                    const questionCard = document.createElement('div');
+                    questionCard.className = 'question-card';
+                    questionCard.innerHTML = `
+                        <p class="question-text">${index + 1}. ${q.question}</p>
+                        <ul class="options-list">
+                            ${q.options.map(option => `
+                                <li class="option-item">
+                                    <label class="option-label">
+                                        <input type="radio" name="question-${index}" value="${option}" class="option-input">
+                                        <span class="option-text">${option}</span>
+                                    </label>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    `;
+                    quizForm.appendChild(questionCard);
+                });
             }
-        }
-    });
 
-    // --- INITIAL LOAD ---
-    // Display users when the page first loads
-    displayUsers();
-});
+            // Handle form submission
+            submitBtn.addEventListener('click', () => {
+                let score = 0;
+                resultDetails.innerHTML = ''; // Clear previous results
+
+                quizQuestions.forEach((q, index) => {
+                    const selectedOption = document.querySelector(`input[name="question-${index}"]:checked`);
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+
+                    if (selectedOption) {
+                        const userAnswer = selectedOption.value;
+                        const isCorrect = userAnswer === q.correctAnswer;
+                        resultItem.textContent = `Question ${index + 1}: Your answer was "${userAnswer}". The correct answer is "${q.correctAnswer}".`;
+
+                        if (isCorrect) {
+                            score++;
+                            resultItem.classList.add('correct');
+                        } else {
+                            resultItem.classList.add('incorrect');
+                        }
+                    } else {
+                        // Handle case where no option is selected
+                        resultItem.textContent = `Question ${index + 1}: You did not answer this question. The correct answer is "${q.correctAnswer}".`;
+                        resultItem.classList.add('incorrect');
+                    }
+                    resultDetails.appendChild(resultItem);
+                });
+
+                resultScore.textContent = `You scored ${score} out of ${quizQuestions.length}!`;
+                resultBox.style.display = 'block';
+            });
+
+            // Initial render
+            renderQuestions();
+        });
